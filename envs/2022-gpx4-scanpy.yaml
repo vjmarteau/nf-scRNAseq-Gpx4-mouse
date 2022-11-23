@@ -1,0 +1,28 @@
+# Conda environment for python scRNAseq data analysis
+name: 2022-gpx4-scanpy
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.10
+  #- ipykernel
+  #- nb_conda_kernels
+  - docopt
+  - matplotlib-base
+  - numpy=1.23
+  - seaborn
+  - pandas
+  - anndata
+  - scanpy
+  - umap-learn
+  - leidenalg
+  - scikit-misc
+  - scvi-tools
+  - flit
+  - pytorch-gpu
+  - tqdm
+  - pip:
+    - decoupler
+    - sfaira
+    - /scanpy_helpers
