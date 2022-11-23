@@ -1,0 +1,18 @@
+# Conda environment for python scRNAseq data analysis
+name: 2022-gpx4-deseq
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - r-base=4.2
+  - r-docopt
+  - r-conflicted
+  - r-tidyverse
+  - bioconductor-deseq2
+  - bioconductor-ihw
+  - bioconductor-enhancedvolcano
+  - bioconductor-variancepartition
+  - r-cowplot
+  - r-rcolorbrewer
+  - r-pheatmap
