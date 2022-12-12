@@ -8,11 +8,20 @@ dependencies:
   - r-base=4.2
   - r-docopt
   - r-conflicted
-  - r-tidyverse
+  - r-rmarkdown
+  - r-yaml
+  - pandoc
+  #- r-tidyverse
+  - r-readr
+  - r-dplyr
+  - r-tibble
+  - r-forcats
+  - r-ggplot2
   - bioconductor-deseq2
   - bioconductor-ihw
   - bioconductor-enhancedvolcano
   - bioconductor-variancepartition
+  - bioconductor-complexheatmap
   - r-cowplot
   - r-rcolorbrewer
   - r-pheatmap

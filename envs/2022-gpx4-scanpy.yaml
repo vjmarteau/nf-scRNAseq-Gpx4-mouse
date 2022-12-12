@@ -8,6 +8,9 @@ dependencies:
   - python=3.10
   #- ipykernel
   #- nb_conda_kernels
+  - jupytext
+  - papermill
+  - nbconvert
   - docopt
   - matplotlib-base
   - numpy=1.23
@@ -19,10 +22,11 @@ dependencies:
   - leidenalg
   - scikit-misc
   - scvi-tools
-  - flit
   - pytorch-gpu
   - tqdm
+  - adjusttext
   - pip:
+    - nxfvars
     - decoupler
     - sfaira
     - /scanpy_helpers
