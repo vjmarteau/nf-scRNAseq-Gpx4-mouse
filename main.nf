@@ -9,6 +9,8 @@ include { RUN_SCVI_AND_SOLO } from "./modules/Run_scVI_and_Solo"
 include { ANNOTATE_CELL_TYPES } from "./modules/Annotate_cell_types"
 include { DESeq2_DGEA } from "./modules/DESeq2_DGEA"
 include { VOLCANO } from "./modules/Volcano"
+include { UMAP } from "./modules/Plot_umap"
+include { PROGENY } from "./modules/PROGENY"
 include { Plot_GOI_Levels } from "./modules/Plot_GOI_levels"
 include { JUPYTERNOTEBOOK as JUPYTER_TEST } from "./modules/local/jupyternotebook/main"
 include { RMARKDOWNNOTEBOOK as RMARKDOWN_TEST } from "./modules/local/rmarkdownnotebook/main"
@@ -20,6 +22,8 @@ workflow {
     samplesheet = file(params.samplesheet, checkIfExists: true)
     cell_cycle_genes = file(params.cell_cycle_genes, checkIfExists: true)
     marker_genes = file(params.marker_genes, checkIfExists: true)
+    progeny = file(params.progeny, checkIfExists: true)
+    dorothea = file(params.dorothea, checkIfExists: true)
     ch_input_files = Channel.fromPath(params.input_path)
     GOI = file(params.GOI, checkIfExists: true)
 
@@ -43,6 +47,10 @@ workflow {
     DESeq2_DGEA(ch_deseq2_input)
 
     VOLCANO(ANNOTATE_CELL_TYPES.out.annotated_adata)
+
+    UMAP(ANNOTATE_CELL_TYPES.out.annotated_adata, marker_genes)
+
+    PROGENY(ANNOTATE_CELL_TYPES.out.annotated_adata, progeny, dorothea)
 
      //Plot_GOI_Levels(ch_deseq2_input, GOI)
 
