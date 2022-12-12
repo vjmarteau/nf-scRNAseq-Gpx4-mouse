@@ -32,7 +32,7 @@ adata = sc.read_h5ad(adata)
 padata = dc.get_pseudobulk(adata, sample_col='sample', groups_col='cell_type', layer='counts', min_prop=0.05, min_smpls=3, min_cells=10,)
 
 # Normalize
-sc.pp.normalize_total(padata, target_sum=1e4)
+sc.pp.normalize_total(padata, target_sum=1e6)
 sc.pp.log1p(padata)
 
 logFCs, pvals = dc.get_contrast(
@@ -64,7 +64,7 @@ adata_rough = adata[adata.obs["cell_type_rough"].isin(["Enterocyte", "Progenitor
 padata = dc.get_pseudobulk(adata_rough, sample_col='sample', groups_col='cell_type', layer='counts', min_prop=0.05, min_smpls=3, min_cells=10,)
 
 # Normalize
-sc.pp.normalize_total(padata, target_sum=1e4)
+sc.pp.normalize_total(padata, target_sum=1e6) # 1e4? CPM
 sc.pp.log1p(padata)
 
 logFCs, pvals = dc.get_contrast(
