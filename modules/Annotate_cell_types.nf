@@ -5,6 +5,7 @@ mode = params.publish_dir_mode
 
 process ANNOTATE_CELL_TYPES {
     publishDir "${out_dir}", mode: "$mode"
+    label "gpu"
 
     input:
         path(adata)

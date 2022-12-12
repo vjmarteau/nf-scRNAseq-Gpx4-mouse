@@ -71,7 +71,7 @@ sc.pp.neighbors(adata, use_rep="X_scVI")
 
 sc.tl.umap(adata)
 
-model.save(f"{resDir}/scVI_model", save_anndata=True)
+#model.save(f"{resDir}/scVI_model", save_anndata=True)
 
 # Doublet detection (SOLO)
 solo_models = [scvi.external.SOLO.from_scvi_model(model, restrict_to_batch=batch) for batch in adata.obs["sample"].unique()]
@@ -102,17 +102,33 @@ sc.pp.neighbors(adata_nodoublet, use_rep="X_scVI")
 
 sc.tl.umap(adata_nodoublet)
 
-sc.tl.leiden(adata_nodoublet, key_added="leiden_res0_25", resolution=0.25)
-sc.tl.leiden(adata_nodoublet, key_added="leiden_res0_5", resolution=0.5)
-sc.tl.leiden(adata_nodoublet, key_added="leiden_res1", resolution=1.0)
+sc.tl.leiden(adata_nodoublet, key_added="leiden", resolution=0.3)
 
 # Save adata nodoublet
 adata_nodoublet.write(f"{resDir}/adata_nodoublet.h5ad", compression="gzip")
 
-# scvi no doublets
 
-#adata_scvi = adata_nodoublet
-adata_scvi = adata_nodoublet[:, adata_nodoublet.var["highly_variable"]].copy()
+# Define function to remove barcodes from adata
+def rmBarcodes(adata, rm):
+    barcodes = adata.obs.index.tolist()
+    rmbarcodes = rm.obs.index.tolist()
+    filteredBarcodes = [c for c in barcodes if c not in rmbarcodes]
+    return(adata[adata.obs.index.isin(filteredBarcodes)].copy())
+
+adata = adata_nodoublet.copy()
+
+adata_rm = adata[adata.obs["leiden"].isin(["3", "7"]), :]
+adata_rm = adata_rm[adata_rm.obs["total_counts"] < 3500, :].copy()
+adata = rmBarcodes(adata, adata_rm)
+
+adata_rm = adata[adata.obs["leiden"] == "1", :].copy()
+adata_rm = adata_rm[adata_rm.obs["total_counts"] < 7000, :].copy()
+adata = rmBarcodes(adata, adata_rm)
+
+# scVI no doublets
+
+adata_scvi = adata
+adata_scvi = adata[:, adata.var["highly_variable"]].copy()
 
 scvi.model.SCVI.setup_anndata(adata_scvi, batch_key="sample")
 
@@ -120,12 +136,37 @@ model = scvi.model.SCVI(adata_scvi)
 
 model.train(early_stopping=True, use_gpu=True)
 
-adata_nodoublet.obsm["X_scVI"] = model.get_latent_representation()
+adata.obsm["X_scVI"] = model.get_latent_representation()
 
-sc.pp.neighbors(adata_nodoublet, use_rep="X_scVI")
+sc.pp.neighbors(adata, use_rep="X_scVI")
 
-sc.tl.umap(adata_nodoublet)
+sc.tl.umap(adata)
 
-model.save(f"{resDir}/scVI_model2", save_anndata=True)
+sc.tl.leiden(adata, key_added="leiden", resolution=0.5)
 
-adata_nodoublet.write(f"{resDir}/adata_nodoublet2.h5ad", compression="gzip")
+adata_rm = adata[adata.obs["leiden"].isin(["12", "14"]), :]
+adata = rmBarcodes(adata, adata_rm)
+
+adata_rm = adata[adata.obs["leiden"].isin(["7"]), :]
+adata_rm = adata_rm[adata_rm.obs["total_counts"] < 5000, :].copy()
+adata = rmBarcodes(adata, adata_rm)
+
+# scVI no doublets
+
+adata_scvi = adata
+adata_scvi = adata[:, adata.var["highly_variable"]].copy()
+
+scvi.model.SCVI.setup_anndata(adata_scvi, batch_key="sample")
+
+model = scvi.model.SCVI(adata_scvi)
+
+model.train(early_stopping=True, use_gpu=True)
+
+adata.obsm["X_scVI"] = model.get_latent_representation()
+
+sc.pp.neighbors(adata, use_rep="X_scVI")
+
+sc.tl.umap(adata)
+
+model.save(f"{resDir}/scVI_model", save_anndata=False)
+adata.write(f"{resDir}/integrated_adata.h5ad", compression="gzip")

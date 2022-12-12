@@ -5,6 +5,7 @@ mode = params.publish_dir_mode
 
 process RUN_SCVI_AND_SOLO {
     publishDir "${out_dir}", mode: "$mode"
+    label "gpu"
 
     input:
         path(adata)
@@ -13,8 +14,7 @@ process RUN_SCVI_AND_SOLO {
         path("scVI_model"), emit: scVI_model
         path("is_doublet.png"), emit: is_doublet, optional: true
         path("adata_nodoublet.h5ad"), emit: adata_nodoublet
-        path("scVI_model2"), emit: scVI_model2
-        path("adata_nodoublet2.h5ad"), emit: adata_nodoublet2
+        path("integrated_adata.h5ad"), emit: integrated_adata
 
 	script:
 	"""

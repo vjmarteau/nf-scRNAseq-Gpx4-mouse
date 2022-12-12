@@ -12,7 +12,6 @@ process DESeq2_DGEA {
     output:
         path("${id}.tsv"), emit: DGEA
 
-
 	script:
 	"""
     DESeq2_DGEA.R \\

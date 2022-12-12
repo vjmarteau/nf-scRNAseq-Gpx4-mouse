@@ -15,7 +15,10 @@ arguments <- docopt(doc, version = "0.1")
 print(arguments)
 
 library(conflicted)
-library(tidyverse)
+library(readr)
+library(dplyr)
+library(tibble)
+library(forcats)
 library(DESeq2)
 library(IHW)
 
@@ -25,11 +28,14 @@ conflict_prefer("filter", "dplyr")
 count_mat <- read_csv(arguments$count_mat)
 metadata <- read_csv(arguments$metadata)
 metadata <- metadata[, -1]
+metadata <- metadata |> group_by(batch) |> dplyr::filter(n() != 1) |> ungroup()
 
 output_file <- arguments$output_file
 
 # Data wrangling
 count_mat <- count_mat |> column_to_rownames(var = "gene_id")
+count_mat <- count_mat[, colnames(count_mat) %in% metadata$sample]
+
 metadata <- metadata |>
   column_to_rownames(var = "sample") |>
   mutate_all(factor) |>

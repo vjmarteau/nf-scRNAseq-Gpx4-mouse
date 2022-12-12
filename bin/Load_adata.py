@@ -58,28 +58,23 @@ adata.X = scipy.sparse.csr_matrix(adata.X)
 adata.write(f"{resDir}/raw_adata.h5ad", compression="gzip")
 
 # Seperately filter sample 6
-adata.obs["sample"] = pd.Categorical(adata.obs["sample"])
+#sample_d = dict()
+#for s in adata.obs['sample'].unique():
+#    adata_s = adata[adata.obs["sample"] == s, :].copy()
+#    adata_s.obs["value"] = 0
+#    sample_d[s] = adata_s
 
-sample_d = dict()
-for s in adata.obs['sample'].values.unique():
-    _sampli = adata[adata.obs["sample"] == s, :]
-    _sampli.obs["value"] = 0
-    sample_d[s] = _sampli
-
-sc.pp.filter_cells(sample_d['FG-6'], min_counts=3000)
-sc.pp.filter_cells(sample_d['FG-6'], min_genes=1100)
+#sc.pp.filter_cells(sample_d['FG-6'], min_counts=1800)
+#sc.pp.filter_cells(sample_d['FG-6'], min_genes=800)
 
 # After filtering individual samples concat to make one adata object
-adatas_new_l = []
-for s in adata.obs['sample'].values.unique():
-    adatas_new_l.append(sample_d[s])
-adata = ad.concat(adatas_new_l)
+#adata = ad.concat(sample_d, label='sample' , merge="unique")
 
 # very basic cell/gene filtering for all samples jointly
-sc.pp.filter_cells(adata, min_counts=1000)
-sc.pp.filter_cells(adata, min_genes=600)
+sc.pp.filter_cells(adata, min_counts=800)
+sc.pp.filter_cells(adata, min_genes=200)
 sc.pp.filter_cells(adata, max_counts=100000)
-sc.pp.filter_genes(adata, min_cells=10)
+sc.pp.filter_genes(adata, min_cells=3)
 
 # annotate the group of mitochondrial genes as 'mito'
 adata.var['mito'] = adata.var_names.str.startswith('mt-')
@@ -88,6 +83,7 @@ adata.var['ribo'] = adata.var_names.str.startswith(('Rps', 'Rpl'))
 
 sc.pp.calculate_qc_metrics(adata, qc_vars=['mito', 'ribo'], percent_top=None, log1p=False, inplace=True)
 
-adata = adata[adata.obs['pct_counts_ribo'] > 5, :]
+adata = adata[adata.obs["pct_counts_mito"] < 30].copy()
+#adata = adata[adata.obs['pct_counts_ribo'] > 5, :]
 
 adata.write(f"{resDir}/adata.h5ad", compression="gzip")

@@ -3,39 +3,70 @@
 nextflow.enable.dsl=2
 
 include { LOAD_ADATA } from "./modules/Load_adata"
+include { EMPTY_DROPLETS } from "./modules/Remove_empty_droplets"
 include { RUN_SCAR } from "./modules/Run_scar"
 include { RUN_SCVI_AND_SOLO } from "./modules/Run_scVI_and_Solo"
 include { ANNOTATE_CELL_TYPES } from "./modules/Annotate_cell_types"
 include { DESeq2_DGEA } from "./modules/DESeq2_DGEA"
-
-include { Render_py } from "./modules/Render_py"
-include { Render_R } from "./modules/Render_R"
+include { VOLCANO } from "./modules/Volcano"
+include { Plot_GOI_Levels } from "./modules/Plot_GOI_levels"
+include { JUPYTERNOTEBOOK as JUPYTER_TEST } from "./modules/local/jupyternotebook/main"
+include { RMARKDOWNNOTEBOOK as RMARKDOWN_TEST } from "./modules/local/rmarkdownnotebook/main"
 
 
 workflow {
     // Retrieve and validate parameters
     assert params.samplesheet != null : "Please specify the `samplesheet` parameter"
     samplesheet = file(params.samplesheet, checkIfExists: true)
+    cell_cycle_genes = file(params.cell_cycle_genes, checkIfExists: true)
     marker_genes = file(params.marker_genes, checkIfExists: true)
     ch_input_files = Channel.fromPath(params.input_path)
+    GOI = file(params.GOI, checkIfExists: true)
 
     // start workflow
     LOAD_ADATA(samplesheet, ch_input_files)
-    RUN_SCAR(LOAD_ADATA.out.raw_adata, LOAD_ADATA.out.adata)
+    EMPTY_DROPLETS(LOAD_ADATA.out.adata)
+    RUN_SCAR(LOAD_ADATA.out.raw_adata, EMPTY_DROPLETS.out.cleaned_adata, cell_cycle_genes)
     RUN_SCVI_AND_SOLO(RUN_SCAR.out.filtered_adata)
-    ANNOTATE_CELL_TYPES(RUN_SCVI_AND_SOLO.out.adata_nodoublet2, marker_genes)
+    //ANNOTATE_CELL_TYPES2(RUN_SCVI_AND_SOLO.out.integrated_adata, marker_genes)
+    ANNOTATE_CELL_TYPES(RUN_SCVI_AND_SOLO.out.integrated_adata, marker_genes)
     
     ch_samplesheets_by_cell_type = ANNOTATE_CELL_TYPES.out.samplesheet.flatten().map { 
         it -> [it.baseName.replace("_samplesheet", ""), it]
-    }.view()
+    }//.view()
 
-    ch_counts_by_cell_type = ANNOTATE_CELL_TYPES.out.counts.flatten().map { 
+    ch_counts_by_cell_type = ANNOTATE_CELL_TYPES.out.counts.flatten().map {
         it -> [it.baseName.replace("_counts", ""), it]
-    }.view()
+    }//.view()
 
-    ch_deseq2_input = ch_samplesheets_by_cell_type.join(ch_counts_by_cell_type).view()
-
+    ch_deseq2_input = ch_samplesheets_by_cell_type.join(ch_counts_by_cell_type)//.view()
     DESeq2_DGEA(ch_deseq2_input)
+
+    VOLCANO(ANNOTATE_CELL_TYPES.out.annotated_adata)
+
+     //Plot_GOI_Levels(ch_deseq2_input, GOI)
+
+    //JUPYTER_TEST(
+    //    Channel.value([
+    //        [id: "01_test"],
+    //        file("${projectDir}/analysis/test_render_notebook.ipynb", checkIfExists: true)
+    //    ]),
+    //    Channel.value(
+    //        ["input_adata": "adata_nodoublet.h5ad"]
+    //    ),
+    //    RUN_SCVI_AND_SOLO.out.adata_nodoublet
+    //)
+    //RMARKDOWN_TEST(
+    //    Channel.value([
+    //        [id: "02_test_rmd"],
+    //        file("${projectDir}/analysis/test_render_R.Rmd", checkIfExists: true)
+    //    ]),
+    //    Channel.value(
+    //        ["samplesheet": "diff_genes_Paneth_counts.csv"]
+    //    ),
+    //    Channel.fromPath("$projectDir/results/scrnaseq/data/pseudo/diff_genes_Paneth_counts.csv")
+    //)
+
     //DESeq2_DGEA(Reformat_data.out.all.mix(Reformat_data2.out.all.view()), prefix)
 
     //channel1.map{ it -> [it.baseName, it]}
@@ -43,5 +74,5 @@ workflow {
     //mix
     //collect
     //flatten
-
+ // RUN_SCVI_AND_SOLO.out.adata_nodoublet.mix(LOAD_ADATA.out.raw_adata).mix().collect()
     }

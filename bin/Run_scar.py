@@ -2,11 +2,12 @@
 
 """
 Usage:
-  Run_scar.py --raw_adata=<raw_adata> --adata=<adata> [options]
+  Run_scar.py --raw_adata=<raw_adata> --adata=<adata> --cell_cycle_genes=<cell_cycle_genes> [options]
 
 Mandatory arguments:
   --raw_adata=<raw_adata>   raw_adata
   --adata=<adata>           adata
+  --cell_cycle_genes=<cell_cycle_genes> cell_cycle_genes
 
 Optional arguments:
   --resDir=<resDir>     Output directory [default: ./]
@@ -16,7 +17,7 @@ from docopt import docopt
 import scvi
 import anndata as ad
 import scanpy as sc
-import pandas as pd
+#import pandas as pd
 
 from threadpoolctl import threadpool_limits
 import multiprocessing
@@ -40,6 +41,7 @@ def set_all_seeds(seed=0):
 args = docopt(__doc__)
 raw_adata = args["--raw_adata"]
 adata = args["--adata"]
+cell_cycle_genes = args["--cell_cycle_genes"]
 resDir = args["--resDir"]
 
 threadpool_limits(16)
@@ -50,12 +52,8 @@ adata = sc.read_h5ad(adata)
 
 
 # Ambient RNA removal (scAR)
-
-adata.obs["sample"] = pd.Categorical(adata.obs["sample"])
-
 sample_d = dict()
-for s in adata.obs['sample'].values.unique():
-    print(s)
+for s in adata.obs['sample'].unique():
 
     raw_adata_s = raw_adata[raw_adata.obs["sample"] == s, :].copy()
     raw_adata_s.obs["value"] = 0
@@ -75,16 +73,21 @@ for s in adata.obs['sample'].values.unique():
     sample_d[s] = adata_s
 
 # Integrate back
-adatas_new_l = []
-for s in adata.obs['sample'].values.unique():
-    adatas_new_l.append(sample_d[s])
-adata = ad.concat(adatas_new_l)
+adata = ad.concat(sample_d, label='sample' , merge="unique")
 
 adata.write(f"{resDir}/denoised_adata.h5ad", compression="gzip")
 
 # Save raw counts to layer counts and use denoised counts for subsequent analysis
-adata.layers['counts'] = adata.X
+adata.layers['counts'] = adata.X.copy()
 adata.X = adata.layers['denoised']
+
+# very basic cell/gene filtering on denoised counts
+sc.pp.filter_cells(adata, min_counts=200)
+sc.pp.filter_cells(adata, min_genes=200)
+sc.pp.filter_cells(adata, max_counts=100000)
+
+sc.pp.filter_genes(adata, min_cells=3)
+#sc.pp.filter_genes(adata, min_counts=10)
 
 # annotate the group of mitochondrial genes as 'mito'
 adata.var['mito'] = adata.var_names.str.startswith('mt-')
@@ -94,15 +97,28 @@ adata.var['ribo'] = adata.var_names.str.startswith(('Rps', 'Rpl'))
 sc.pp.calculate_qc_metrics(adata, qc_vars=['mito', 'ribo'], percent_top=None, log1p=False, inplace=True)
 
 adata = adata[adata.obs["pct_counts_mito"] < 10].copy()
-adata = adata[adata.obs['pct_counts_ribo'] > 5, :] # filter for percent ribo > 0.05
+#adata = adata[adata.obs['pct_counts_ribo'] > 5, :] # filter for percent ribo > 0.05
 
+# Annotate cell cycle phase
 
-# very basic cell/gene filtering on denoised counts
-sc.pp.filter_cells(adata, min_counts=1500)
-sc.pp.filter_cells(adata, min_genes=600)
-sc.pp.filter_cells(adata, max_counts=100000)
+cell_cycle_genes = [
+    x.strip() for x in open(cell_cycle_genes)
+]
 
-sc.pp.filter_genes(adata, min_cells=10)
-sc.pp.filter_genes(adata, min_counts=10)
+# Split into 2 lists
+s_genes = cell_cycle_genes[:43]
+g2m_genes = cell_cycle_genes[43:]
+cell_cycle_genes = [x for x in cell_cycle_genes if x in adata.var_names]
+
+adata_cycle = adata.copy()
+sc.pp.normalize_total(adata_cycle)
+sc.pp.log1p(adata_cycle)
+sc.pp.scale(adata_cycle)
+
+sc.tl.score_genes_cell_cycle(adata_cycle, s_genes=s_genes, g2m_genes=g2m_genes)
+
+adata.obs['S_score'] = adata_cycle.obs['S_score']
+adata.obs['G2M_score'] = adata_cycle.obs['G2M_score']
+adata.obs['phase'] = adata_cycle.obs['phase']
 
 adata.write(f"{resDir}/filtered_adata.h5ad", compression="gzip")
