@@ -164,7 +164,7 @@ for ct, tmp_ad in tqdm(sh.util.split_anndata(adata, "cell_type")):
       save_pseudobulk(pb, f"{resDir}/{ct}_samplesheet.csv", f"{resDir}/{ct}_counts.csv")
 
 
-adata_rough = adata[adata.obs["cell_type_rough"].isin(["Enterocyte", "Progenitor", "B cell", "T cell"]), :].copy()
+adata_rough = adata[adata.obs["cell_type_rough"].isin(["Enterocyte", "Progenitor", "T cell"]), :].copy()
 
 for ct, tmp_ad in tqdm(sh.util.split_anndata(adata_rough, "cell_type_rough")):
     pb = dc.get_pseudobulk(
@@ -179,4 +179,4 @@ for ct, tmp_ad in tqdm(sh.util.split_anndata(adata_rough, "cell_type_rough")):
     if pb.obs['group'].nunique() <= 1:
       print(f"Cell type {ct} does not have enough replicates per group")
     else:
-      save_pseudobulk(pb, f"{resDir}/{ct}_combined_samplesheet.csv", f"{resDir}/{ct}_combined_counts.csv")
+      save_pseudobulk(pb, f"{resDir}/{ct}_samplesheet.csv", f"{resDir}/{ct}_counts.csv")
