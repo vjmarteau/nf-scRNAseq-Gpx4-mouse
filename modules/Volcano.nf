@@ -11,6 +11,7 @@ process VOLCANO {
 
     output:
         path("*.png")
+        path("*.csv")
 
 	script:
 	"""

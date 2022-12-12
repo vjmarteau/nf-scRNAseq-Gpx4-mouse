@@ -47,5 +47,43 @@ logFCs, pvals = dc.get_contrast(
 for ct in logFCs.index.tolist():
   fig, ax = plt.subplots(1,1,figsize=(7,5))
   dc.plot_volcano(logFCs, pvals, ct, top=15, sign_thr=0.05, lFCs_thr=0.5, ax=ax)
-  fig.savefig(f"{resDir}/{ct}_volcano.png", bbox_inches="tight") 
+  fig.savefig(f"{resDir}/{ct}_volcano.png", bbox_inches="tight")
   
+for ct in logFCs.index.tolist():
+  sign = dc.get_top_targets(logFCs, pvals, ct, sign_thr=0.05, lFCs_thr=0.5, fdr_corr=False)
+  sign.drop(axis='columns', labels=['contrast'], inplace=True)
+  sign.rename({'name': 'gene_symbol'}, axis=1, inplace=True)
+  sign = sign.round(decimals = 4)
+  sign.to_csv(f"{resDir}/{ct}_res_ttest.csv", index=False)
+
+
+
+adata_rough = adata[adata.obs["cell_type_rough"].isin(["Enterocyte", "Progenitor", "T cell"]), :].copy()
+
+# Get pseudo-bulk profile
+padata = dc.get_pseudobulk(adata_rough, sample_col='sample', groups_col='cell_type', layer='counts', min_prop=0.05, min_smpls=3, min_cells=10,)
+
+# Normalize
+sc.pp.normalize_total(padata, target_sum=1e4)
+sc.pp.log1p(padata)
+
+logFCs, pvals = dc.get_contrast(
+  padata,
+  group_col='cell_type_rough',
+  condition_col='group',
+  condition='KO',
+  reference='WT',
+  method='t-test'
+  )
+
+for ct in logFCs.index.tolist():
+  fig, ax = plt.subplots(1,1,figsize=(7,5))
+  dc.plot_volcano(logFCs, pvals, ct, top=15, sign_thr=0.05, lFCs_thr=0.5, ax=ax)
+  fig.savefig(f"{resDir}/{ct}_volcano.png", bbox_inches="tight")
+  
+for ct in logFCs.index.tolist():
+  sign = dc.get_top_targets(logFCs, pvals, ct, sign_thr=0.05, lFCs_thr=0.5, fdr_corr=False)
+  sign.drop(axis='columns', labels=['contrast'], inplace=True)
+  sign.rename({'name': 'gene_symbol'}, axis=1, inplace=True)
+  sign = sign.round(decimals = 4)
+  sign.to_csv(f"{resDir}/{ct}_res_ttest.csv", index=False)
