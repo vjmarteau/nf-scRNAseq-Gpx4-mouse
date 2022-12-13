@@ -78,60 +78,62 @@ def plot_all_palettes():
         *[plot_palette(v) for v in COLORS.__dict__.keys() if not v.startswith("_")]
     ).resolve_scale(color="independent")
 
-
 class COLORS:
-    timepoint = {
-        "T0": "#1b9e77",
-        "T1": "#d95f02",
-        "T2": "#7570b3",
+
+    group = {
+        "WT": "#4daf4a",
+        "KO": "#ff7f00",
     }
-    patient_id = {
-        "P1": "#000000",
-        "P2": "#E69F00",
-        "P3": "#56B4E9",
-        "P4": "#009E73",
-        "P5": "#F0E442",
-        "P6": "#0072B2",
-        "P7": "#D55E00",
-        "P8": "#CC79A7",
+
+    sample = {
+        "FG-1": "#000000",
+        "FG-2": "#E69F00",
+        "FG-3": "#56B4E9",
+        "FG-4": "#009E73",
+        "FG-5": "#F0E442",
+        "FG-6": "#0072B2",
+        "FG-7": "#D55E00",
+        "FG-8": "#CC79A7",
     }
+    
+    phase = {
+        "G1": "#1b9e77",
+        "G2M": "#d95f02",
+        "S": "#7570b3",
+    }
+
     cell_type = dict(
         natsorted(
             {
-                "B cells": "#b5bd61",
-                "Cholangiocytes": "#f7b6d2",
-                "Endothelial cells": "#8c564b",
-                "Hepatocytes": "#17becf",
-                "Mast cells": "#ffbb78",
-                "NK cells": "#aa40fc",
-                "Neutrophils": "#1f77b4",
-                "Plasma cells": "#e377c2",
-                "Progenitor cells": "#555555",
+                "B cell": "#b5bd61",
+                "B cell dividing": "#f7b6d2",
+                "Enterocyte prox": "#8c564b",
+                "Enterocyte dist": "#17becf",
+                "Enteroendocrine": "#ffbb78",
+                "TA Progenitor": "#aa40fc",
+                "Goblet": "#1f77b4",
+                "Paneth": "#e377c2",
+                "Stem Progenitor": "#555555",
                 "T cells CD4": "#279e68",
                 "T cells CD8": "#006d2c",
-                "NKT cells": "#98df8a",
-                "cDCs": "#aec7e8",
-                "Monocytes ⁄ Macrophages": "#ff7f0e",
-                "pDCs": "#c49c94",
+                "Tuft": "#98df8a",
+                "MO DC": "#aec7e8",
             }.items()
         )
     )
-    cell_type_coarse = dict(
+
+    cell_type_rough = dict(
         natsorted(
             {
-                "B cells": "#b5bd61",
-                "Cholangiocytes": "#f7b6d2",
-                "Endothelial cells": "#8c564b",
-                "Hepatocytes": "#17becf",
-                "Mast cells": "#ffbb78",
-                "NK cells": "#aa40fc",
-                "Neutrophils": "#1f77b4",
-                "Plasma cells": "#e377c2",
-                "Progenitor cells": "#555555",
-                "T cells": "#279e68",
-                "cDCs": "#aec7e8",
-                "Monocytes ⁄ Macrophages": "#ff7f0e",
-                "pDCs": "#c49c94",
+                "B cell": "#b5bd61",
+                "Progenitor": "#f7b6d2",
+                "Enterocyte": "#8c564b",
+                "Goblet": "#17becf",
+                "Enteroendocrine": "#ffbb78",
+                "Paneth": "#aa40fc",
+                "Tuft": "#1f77b4",
+                "MO DC": "#e377c2",
+                "T cell": "#279e68",
             }.items()
         )
     )
