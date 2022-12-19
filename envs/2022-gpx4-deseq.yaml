@@ -18,6 +18,7 @@ dependencies:
   - r-forcats
   - r-ggplot2
   - bioconductor-deseq2
+  - bioconductor-apeglm
   - bioconductor-ihw
   - bioconductor-enhancedvolcano
   - bioconductor-variancepartition
