@@ -13,8 +13,10 @@ include { UMAP } from "./modules/Plot_umap"
 include { PROGENY } from "./modules/PROGENY"
 include { Plot_GOI_Levels } from "./modules/Plot_GOI_levels"
 include { JUPYTERNOTEBOOK as JUPYTER_TEST } from "./modules/local/jupyternotebook/main"
+include { JUPYTERNOTEBOOK as COMPOSITION } from "./modules/local/jupyternotebook/main"
 include { RMARKDOWNNOTEBOOK as RMARKDOWN_TEST } from "./modules/local/rmarkdownnotebook/main"
-
+include { CONVERT_ADATA } from "./modules/Convert"
+include { CONVERT_SEURAT } from "./modules/Convert_Seurat"
 
 workflow {
     // Retrieve and validate parameters
@@ -51,6 +53,33 @@ workflow {
     UMAP(ANNOTATE_CELL_TYPES.out.annotated_adata, marker_genes)
 
     PROGENY(ANNOTATE_CELL_TYPES.out.annotated_adata, progeny, dorothea)
+    
+    COMPOSITION(
+        Channel.value([
+            [id: "02_cell_type_composition"],
+            file("${projectDir}/analysis/03-cell_type_composition.py", checkIfExists: true)
+        ]),
+        Channel.value(
+            ["adata_path": "annotated_adata.h5ad"]
+        ),
+        ANNOTATE_CELL_TYPES.out.annotated_adata
+    )
+
+    CONVERT_ADATA(ANNOTATE_CELL_TYPES.out.annotated_adata)
+    
+    //ch_make_seurat = CONVERT_ADATA.out.convert.flatten().map { 
+    //   it -> [it.baseName, it]
+    //}
+
+    CONVERT_SEURAT(
+        CONVERT_ADATA.out.counts_matrix,
+        CONVERT_ADATA.out.denoised_matrix,
+        CONVERT_ADATA.out.features,
+        CONVERT_ADATA.out.barcodes,
+        CONVERT_ADATA.out.metadata,
+        CONVERT_ADATA.out.metadata_var,
+        CONVERT_ADATA.out.umap
+        )
 
      //Plot_GOI_Levels(ch_deseq2_input, GOI)
 

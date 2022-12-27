@@ -23,6 +23,7 @@ dependencies:
   - bioconductor-enhancedvolcano
   - bioconductor-variancepartition
   - bioconductor-complexheatmap
+  - r-seurat
   - r-cowplot
   - r-rcolorbrewer
   - r-pheatmap
