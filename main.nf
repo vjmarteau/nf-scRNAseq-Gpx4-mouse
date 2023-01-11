@@ -7,7 +7,9 @@ include { EMPTY_DROPLETS } from "./modules/Remove_empty_droplets"
 include { RUN_SCAR } from "./modules/Run_scar"
 include { RUN_SCVI_AND_SOLO } from "./modules/Run_scVI_and_Solo"
 include { ANNOTATE_CELL_TYPES } from "./modules/Annotate_cell_types"
+include { DENOISED_PSEUDOBULK } from "./modules/Denoised_pseudobulk"
 include { DESeq2_DGEA } from "./modules/DESeq2_DGEA"
+include { DESeq2_DGEA as DESeq2_DGEA_DENOISED} from "./modules/DESeq2_DGEA"
 include { VOLCANO } from "./modules/Volcano"
 include { UMAP } from "./modules/Plot_umap"
 include { PROGENY } from "./modules/PROGENY"
@@ -47,6 +49,21 @@ workflow {
 
     ch_deseq2_input = ch_samplesheets_by_cell_type.join(ch_counts_by_cell_type)//.view()
     DESeq2_DGEA(ch_deseq2_input)
+
+    // Get denosied pseudobulk DGEA
+    DENOISED_PSEUDOBULK(ANNOTATE_CELL_TYPES.out.annotated_adata)
+
+    ch_samplesheets_by_cell_type_denoised = DENOISED_PSEUDOBULK.out.denoised_samplesheet.flatten().map { 
+        it -> [it.baseName.replace("_denoised_samplesheet", ""), it]
+    }//.view()
+
+    ch_counts_by_cell_type_denoised = DENOISED_PSEUDOBULK.out.denoised_counts.flatten().map {
+        it -> [it.baseName.replace("_denoised_counts", ""), it]
+    }//.view()
+
+    ch_deseq2_input_denoised = ch_samplesheets_by_cell_type_denoised.join(ch_counts_by_cell_type_denoised)//.view()
+    DESeq2_DGEA_DENOISED(ch_deseq2_input_denoised)
+
 
     VOLCANO(ANNOTATE_CELL_TYPES.out.annotated_adata)
 

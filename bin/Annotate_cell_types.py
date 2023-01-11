@@ -145,7 +145,7 @@ def save_pseudobulk(pb, samplesheet_filename, counts_filename):
     samplesheet.reset_index(inplace=True)
     bulk_df = pb.to_df().T
     bulk_df.index.name = "gene_id"
-    samplesheet.to_csv(samplesheet_filename)
+    samplesheet.to_csv(samplesheet_filename, index=False)
     bulk_df.to_csv(counts_filename)
 
 for ct, tmp_ad in tqdm(sh.util.split_anndata(adata, "cell_type")):
