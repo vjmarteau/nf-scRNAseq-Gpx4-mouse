@@ -26,7 +26,6 @@ resDir = args["--resDir"]
 
 adata = sc.read_h5ad(adata)
 
-
 scipy.io.mmwrite(os.path.join(resDir, "counts_matrix.mtx"), scipy.sparse.csr_matrix(adata.layers["counts"].T))
 scipy.io.mmwrite(os.path.join(resDir, "denoised_matrix.mtx"), scipy.sparse.csr_matrix(adata.layers["denoised"].T))
 

@@ -15,8 +15,8 @@ include { Plot_GOI_Levels } from "./modules/Plot_GOI_levels"
 include { JUPYTERNOTEBOOK as JUPYTER_TEST } from "./modules/local/jupyternotebook/main"
 include { JUPYTERNOTEBOOK as COMPOSITION } from "./modules/local/jupyternotebook/main"
 include { RMARKDOWNNOTEBOOK as RMARKDOWN_TEST } from "./modules/local/rmarkdownnotebook/main"
-include { CONVERT_ADATA } from "./modules/Convert"
-include { CONVERT_SEURAT } from "./modules/Convert_Seurat"
+include { CONVERT_ADATA_TO_SEURAT } from "./modules/Convert_adata_to_seurat"
+//include { CONVERT_SEURAT as CONVERT_SEURAT2 } from "./modules/Convert_Seurat"
 
 workflow {
     // Retrieve and validate parameters
@@ -65,21 +65,9 @@ workflow {
         ANNOTATE_CELL_TYPES.out.annotated_adata
     )
 
-    CONVERT_ADATA(ANNOTATE_CELL_TYPES.out.annotated_adata)
+    CONVERT_ADATA_TO_SEURAT(ANNOTATE_CELL_TYPES.out.annotated_adata)
     
-    //ch_make_seurat = CONVERT_ADATA.out.convert.flatten().map { 
-    //   it -> [it.baseName, it]
-    //}
-
-    CONVERT_SEURAT(
-        CONVERT_ADATA.out.counts_matrix,
-        CONVERT_ADATA.out.denoised_matrix,
-        CONVERT_ADATA.out.features,
-        CONVERT_ADATA.out.barcodes,
-        CONVERT_ADATA.out.metadata,
-        CONVERT_ADATA.out.metadata_var,
-        CONVERT_ADATA.out.umap
-        )
+    //CONVERT_SEURAT2(CONVERT_ADATA.out.convert)
 
      //Plot_GOI_Levels(ch_deseq2_input, GOI)
 
